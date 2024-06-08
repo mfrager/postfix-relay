@@ -68,7 +68,7 @@ def parse_postfix_log(file_name, file_path):
             status_detail = None
             if status:
                 pts = status.split(' ', 1)
-                status = pts[0]
+                status = pts[0].replace(',', '')
                 if len(pts) > 1:
                     status_detail = pts[1]
 
@@ -123,8 +123,8 @@ def extract_message_id(log_line):
 
 def extract_status(log_line):
     # Extract status from log line using regex
-    match = re.search(r'status=([a-zA-Z]+) \((.*)\)', log_line)
-    return match.group(1) + ' ' + match.group(2) if match else None
+    match = re.search(r'status=([a-zA-Z]+,? .*)', log_line)
+    return match.group(1) if match else None
 
 # Main function to run the script
 def main():
