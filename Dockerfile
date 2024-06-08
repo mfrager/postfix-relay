@@ -6,6 +6,7 @@ RUN \
   apt-get -y --no-install-recommends install \
     procps \
     postfix \
+    postfix-pcre \
     libsasl2-modules \
     libpam-pwdfile \
     sasl2-bin \
