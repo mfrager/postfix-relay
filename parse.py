@@ -2,7 +2,8 @@
 
 import re
 import json
-from sqlalchemy import create_engine, Column, Integer, String, Text, JSON, Table, MetaData
+from datetime import datetime
+from sqlalchemy import create_engine, Column, Integer, String, Text, JSON, Table, MetaData, DateTime
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # Define the SQLite database
@@ -26,6 +27,7 @@ class LogFile(Base):
 class Mail(Base):
     __tablename__ = 'mail'
     id = Column(Integer, primary_key=True, autoincrement=True)
+    ts = Column(DateTime, nullable=True)
     postfix_id = Column(String, unique=True, nullable=False)
     message_id = Column(String, nullable=True)
     email_to = Column(String, nullable=True)
@@ -61,6 +63,7 @@ def parse_postfix_log(file_name, file_path):
             if not(postfix_id):
                 line = file.readline()
                 continue
+            ts = extract_timestamp(line)
             email_to = extract_email_to(line)
             email_from = extract_email_from(line)
             message_id = extract_message_id(line)
@@ -75,11 +78,13 @@ def parse_postfix_log(file_name, file_path):
             # If a new postfix_id is found, create a new Mail entry
             mail_entry = session.query(Mail).filter_by(postfix_id=postfix_id).first()
             if not mail_entry:
-                mail_entry = Mail(postfix_id=postfix_id, log_text=line, email_to=email_to, email_from=email_from, message_id=message_id, status=status)
+                mail_entry = Mail(postfix_id=postfix_id, log_text=line, email_to=email_to, email_from=email_from, message_id=message_id, status=status, ts=ts)
                 session.add(mail_entry)
             else:
                 # Update the existing Mail entry with new information
                 mail_entry.log_text += "\n" + line if mail_entry.log_text else line
+                if ts:
+                    mail_entry.ts = ts
                 if email_to:
                     mail_entry.email_to = email_to
                 if email_from:
@@ -126,6 +131,15 @@ def extract_status(log_line):
     match = re.search(r'status=([a-zA-Z]+,? .*)', log_line)
     return match.group(1) if match else None
 
+def extract_timestamp(log_line):
+    # Extract timestamp from log line and convert to datetime object
+    match = re.match(r'(\w{3} \d{2} \d{2}:\d{2}:\d{2})', log_line)
+    if match:
+        timestamp_str = match.group(1)
+        current_year = datetime.now().year
+        return datetime.strptime(f"{current_year} {timestamp_str}", "%Y %b %d %H:%M:%S")
+    return None
+
 # Main function to run the script
 def main():
     log_file_name = 'postfix.log'
@@ -134,3 +148,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
