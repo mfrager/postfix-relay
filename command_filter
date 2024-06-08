@@ -1,0 +1,3 @@
+# Bounce-never mail sink.
+/^(RCPT\s+TO:\s*<.*>.*)\s+NOTIFY=\S+(.*)/     $1 NOTIFY=NEVER$2
+/^(RCPT\s+TO:.*)/                             $1 NOTIFY=NEVER

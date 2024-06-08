@@ -40,6 +40,7 @@ ENV \
   SASL_Passwds=""
 RUN mkdir -p /etc/opendkim/keys
 COPY run /root/
+COPY command_filter /etc/postfix/
 VOLUME ["/var/lib/postfix", "/var/mail", "/var/spool/postfix", "/etc/opendkim/keys"]
 EXPOSE 25
 CMD ["/root/run"]
